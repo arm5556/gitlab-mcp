@@ -18,6 +18,8 @@ import {
   OptimizedGitLabDiscussionSchema,
   streamlineDiscussion,
   GitLabDiscussionNoteSchema,
+  OptimizedCreatedNoteSchema,
+  streamlineCreatedNote,
   PaginatedDiscussionResponseSchema,
   GetMergeRequestSchema,
   ListMergeRequestDiscussionsSchema,
@@ -30,6 +32,7 @@ import {
   type GitLabDiscussion,
   type OptimizedGitLabDiscussion,
   type GitLabDiscussionNote,
+  type OptimizedCreatedNote,
   type PaginatedDiscussionResponse,
   type CreateMergeRequestOptions,
   type CreateMergeRequestNoteOptions
@@ -238,7 +241,7 @@ export async function createMergeRequestNote(
   body: string,
   position?: CreateMergeRequestNoteOptions['position'],
   createdAt?: string
-): Promise<GitLabDiscussionNote> {
+): Promise<OptimizedCreatedNote> {
   validateGitLabToken();
   projectId = decodeURIComponent(projectId);
 
@@ -260,5 +263,6 @@ export async function createMergeRequestNote(
 
   await handleGitLabError(response);
   const data = await response.json();
-  return GitLabDiscussionNoteSchema.parse(data);
+  const fullNote = GitLabDiscussionNoteSchema.parse(data);
+  return streamlineCreatedNote(fullNote);
 } 

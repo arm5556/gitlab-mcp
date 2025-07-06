@@ -16,6 +16,20 @@ export const OptimizedGitLabDiscussionNoteSchema = z.object({
   }).optional(),
 });
 
+// Optimized Created Note schema - minimal fields for note creation responses
+export const OptimizedCreatedNoteSchema = z.object({
+  id: z.number(),
+  body: z.string(),
+  author: z.object({
+    username: z.string(),
+  }),
+  created_at: z.string(),
+  position: z.object({
+    new_path: z.string(),
+    new_line: z.number().nullable(),
+  }).optional(),
+});
+
 // Optimized Discussion schema - streamlined for AI agents
 export const OptimizedGitLabDiscussionSchema = z.object({
   id: z.string(),
@@ -99,6 +113,24 @@ export function streamlineDiscussion(fullDiscussion: any): z.infer<typeof Optimi
   };
 }
 
+/**
+ * Transform full GitLab note response to optimized format for note creation
+ */
+export function streamlineCreatedNote(fullNote: any): z.infer<typeof OptimizedCreatedNoteSchema> {
+  return {
+    id: fullNote.id,
+    body: fullNote.body,
+    author: {
+      username: fullNote.author?.username,
+    },
+    created_at: fullNote.created_at,
+    position: fullNote.position ? {
+      new_path: fullNote.position.new_path,
+      new_line: fullNote.position.new_line,
+    } : undefined,
+  };
+}
+
 // Paginated Discussion Response schema - for client-side pagination
 export const PaginatedDiscussionResponseSchema = z.object({
   total_unresolved: z.number().describe("Total number of unresolved discussions"),
@@ -128,6 +160,7 @@ export const CreateMergeRequestNoteSchema = ProjectParamsSchema.extend({
 // Types
 export type GitLabDiscussionNote = z.infer<typeof GitLabDiscussionNoteSchema>;
 export type OptimizedGitLabDiscussionNote = z.infer<typeof OptimizedGitLabDiscussionNoteSchema>;
+export type OptimizedCreatedNote = z.infer<typeof OptimizedCreatedNoteSchema>;
 export type GitLabDiscussion = z.infer<typeof GitLabDiscussionSchema>;
 export type OptimizedGitLabDiscussion = z.infer<typeof OptimizedGitLabDiscussionSchema>;
 export type PaginatedDiscussionResponse = z.infer<typeof PaginatedDiscussionResponseSchema>;
