@@ -3,7 +3,15 @@
 import fetch from 'node-fetch';
 import { GITLAB_API_URL, DEFAULT_FETCH_CONFIG } from '../config/gitlab.js';
 import { handleGitLabError } from '../utils/index.js';
-import { GitLabIssue, GitLabIssueSchema, CreateIssueOptions, UpdateIssueOptions } from '../schemas/index.js';
+import { 
+  GitLabIssue, 
+  GitLabIssueSchema, 
+  OptimizedGitLabIssue,
+  OptimizedGitLabIssueSchema,
+  streamlineIssue,
+  CreateIssueOptions, 
+  UpdateIssueOptions 
+} from '../schemas/index.js';
 
 /**
  * Create a new issue in a GitLab project
@@ -11,7 +19,7 @@ import { GitLabIssue, GitLabIssueSchema, CreateIssueOptions, UpdateIssueOptions 
 export async function createIssue(
   projectId: string,
   options: Omit<CreateIssueOptions, 'project_id'>
-): Promise<GitLabIssue> {
+): Promise<OptimizedGitLabIssue> {
   projectId = decodeURIComponent(projectId);
   const url = new URL(
     `${GITLAB_API_URL}/projects/${encodeURIComponent(projectId)}/issues`
@@ -25,7 +33,8 @@ export async function createIssue(
 
   await handleGitLabError(response);
   const data = await response.json();
-  return GitLabIssueSchema.parse(data);
+  const fullIssue = GitLabIssueSchema.parse(data);
+  return streamlineIssue(fullIssue);
 }
 
 /**
@@ -34,7 +43,7 @@ export async function createIssue(
 export async function getIssue(
   projectId: string,
   issueIid: number
-): Promise<GitLabIssue> {
+): Promise<OptimizedGitLabIssue> {
   projectId = decodeURIComponent(projectId);
   const url = new URL(
     `${GITLAB_API_URL}/projects/${encodeURIComponent(projectId)}/issues/${issueIid}`
@@ -44,7 +53,8 @@ export async function getIssue(
 
   await handleGitLabError(response);
   const data = await response.json();
-  return GitLabIssueSchema.parse(data);
+  const fullIssue = GitLabIssueSchema.parse(data);
+  return streamlineIssue(fullIssue);
 }
 
 /**
@@ -54,7 +64,7 @@ export async function updateIssue(
   projectId: string,
   issueIid: number,
   options: Omit<UpdateIssueOptions, 'project_id' | 'issue_iid'>
-): Promise<GitLabIssue> {
+): Promise<OptimizedGitLabIssue> {
   projectId = decodeURIComponent(projectId);
   const url = new URL(
     `${GITLAB_API_URL}/projects/${encodeURIComponent(projectId)}/issues/${issueIid}`
@@ -68,5 +78,6 @@ export async function updateIssue(
 
   await handleGitLabError(response);
   const data = await response.json();
-  return GitLabIssueSchema.parse(data);
+  const fullIssue = GitLabIssueSchema.parse(data);
+  return streamlineIssue(fullIssue);
 }

@@ -29,7 +29,29 @@ export const GitLabMilestoneSchema = z.object({
   web_url: z.string(),
 });
 
-// Issue schema
+// Optimized Issue schema - only essential fields for AI agents
+export const OptimizedGitLabIssueSchema = z.object({
+  iid: z.number(),
+  title: z.string(),
+  description: z.string().nullable(),
+  state: z.string(),
+  author: z.object({
+    username: z.string(),
+  }),
+  assignees: z.array(z.object({
+    username: z.string(),
+  })),
+  labels: z.array(z.string()),
+  milestone: z.object({
+    title: z.string(),
+    state: z.string(),
+  }).nullable(),
+  created_at: z.string(),
+  updated_at: z.string(),
+  web_url: z.string(),
+});
+
+// Full Issue schema (for validation of GitLab API responses)
 export const GitLabIssueSchema = z.object({
   id: z.number(),
   iid: z.number(),
@@ -65,6 +87,36 @@ export const GitLabIssueSchema = z.object({
   discussion_locked: z.boolean().nullable().optional(),
   weight: z.number().nullable().optional(),
 });
+
+/**
+ * Transform full GitLab issue response to optimized format for AI agents
+ */
+export function streamlineIssue(fullIssue: any): z.infer<typeof OptimizedGitLabIssueSchema> {
+  return {
+    iid: fullIssue.iid,
+    title: fullIssue.title,
+    description: fullIssue.description,
+    state: fullIssue.state,
+    author: {
+      username: fullIssue.author?.username,
+    },
+    assignees: fullIssue.assignees?.map((assignee: any) => ({
+      username: assignee.username,
+    })) || [],
+    labels: Array.isArray(fullIssue.labels) 
+      ? fullIssue.labels.map((label: any) => 
+          typeof label === 'string' ? label : label.name
+        )
+      : [],
+    milestone: fullIssue.milestone ? {
+      title: fullIssue.milestone.title,
+      state: fullIssue.milestone.state,
+    } : null,
+    created_at: fullIssue.created_at,
+    updated_at: fullIssue.updated_at,
+    web_url: fullIssue.web_url,
+  };
+}
 
 // Create issue schema
 export const CreateIssueSchema = ProjectParamsSchema.extend({
@@ -119,6 +171,7 @@ export const UpdateIssueSchema = z.object({
 export type GitLabLabel = z.infer<typeof GitLabLabelSchema>;
 export type GitLabMilestone = z.infer<typeof GitLabMilestoneSchema>;
 export type GitLabIssue = z.infer<typeof GitLabIssueSchema>;
+export type OptimizedGitLabIssue = z.infer<typeof OptimizedGitLabIssueSchema>;
 export type CreateIssueOptions = z.infer<typeof CreateIssueSchema>;
 export type GetIssueOptions = z.infer<typeof GetIssueSchema>;
 export type UpdateIssueOptions = z.infer<typeof UpdateIssueSchema>;
