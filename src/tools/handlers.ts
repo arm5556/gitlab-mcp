@@ -90,8 +90,7 @@ export async function handleToolCall(request: ToolCallRequest): Promise<ToolResp
           args.project_id,
           args.merge_request_iid,
           args.discussion_id,
-          args.body,
-          args.created_at
+          args.body
         );
         return {
           content: [{ type: "text", text: JSON.stringify(note) }],

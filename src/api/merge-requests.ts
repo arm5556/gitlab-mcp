@@ -140,18 +140,14 @@ export async function replyToThread(
   projectId: string,
   mergeRequestIid: number,
   discussionId: string,
-  body: string,
-  createdAt?: string
-): Promise<GitLabDiscussionNote> {
+  body: string
+): Promise<OptimizedCreatedNote> {
   validateGitLabToken();
   projectId = decodeURIComponent(projectId);
 
   const url = `${GITLAB_API_URL}/projects/${encodeURIComponent(projectId)}/merge_requests/${mergeRequestIid}/discussions/${discussionId}/notes`;
 
-  const requestBody: any = { body };
-  if (createdAt) {
-    requestBody.created_at = createdAt;
-  }
+  const requestBody = { body };
 
   const response = await fetch(url, {
     ...DEFAULT_FETCH_CONFIG,
@@ -161,7 +157,8 @@ export async function replyToThread(
 
   await handleGitLabError(response);
   const data = await response.json();
-  return GitLabDiscussionNoteSchema.parse(data);
+  const fullNote = GitLabDiscussionNoteSchema.parse(data);
+  return streamlineCreatedNote(fullNote);
 }
 
 /**
