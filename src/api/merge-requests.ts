@@ -142,7 +142,7 @@ export async function replyToThread(
   discussionId: string,
   body: string,
   createdAt?: string
-): Promise<GitLabDiscussionNote> {
+): Promise<OptimizedCreatedNote> {
   validateGitLabToken();
   projectId = decodeURIComponent(projectId);
 
@@ -161,7 +161,8 @@ export async function replyToThread(
 
   await handleGitLabError(response);
   const data = await response.json();
-  return GitLabDiscussionNoteSchema.parse(data);
+  const fullNote = GitLabDiscussionNoteSchema.parse(data);
+  return streamlineCreatedNote(fullNote);
 }
 
 /**
