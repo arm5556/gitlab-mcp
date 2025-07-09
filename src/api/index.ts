@@ -1,13 +1,11 @@
-// Re-export all API functions for the 11 exposed GitLab MCP tools
+// API function exports for GitLab MCP tools
 
-// Merge Request APIs (6 tools: get_merge_request, get_mr_discussions, reply_to_thread, create_merge_request_note, update_merge_request, create_merge_request)
+// Merge Request APIs (4 tools: get_merge_request, get_mr_discussions, reply_to_thread, update_merge_request)
 export {
   getMergeRequest,
   listMergeRequestDiscussions,
   replyToThread,
-  updateMergeRequest,
-  createMergeRequest,
-  createMergeRequestNote
+  updateMergeRequest
 } from './merge-requests.js';
 
 // Vulnerability APIs (1 tool: get_vulnerabilities_by_ids)
@@ -20,9 +18,16 @@ export {
   getFailedTestCases
 } from './pipelines.js';
 
-// Issue APIs (3 tools: create_issue, get_issue, update_issue)
+// Issue APIs (4 tools: create_issue, get_issue, update_issue, list_issues)
 export {
   createIssue,
   getIssue,
-  updateIssue
-} from './issues.js'; 
+  updateIssue,
+  listIssues
+} from './issues.js';
+
+// Merge Request Note APIs (2 tools: create_merge_request, create_merge_request_note)
+export {
+  createMergeRequest,
+  createMergeRequestNote
+} from './merge-requests.js'; 

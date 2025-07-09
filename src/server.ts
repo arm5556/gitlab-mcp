@@ -79,7 +79,6 @@ export function setupServer() {
     const result = await handleToolCall(request);
     return {
       content: result.content,
-      isError: result.isError || false
     };
   });
 

@@ -1,4 +1,4 @@
-// Tool handlers for the 11 exposed GitLab MCP tools
+// Tool handlers for the 12 exposed GitLab MCP tools
 import * as z from 'zod';
 import {
   getMergeRequest,
@@ -10,6 +10,7 @@ import {
   createIssue,
   getIssue,
   updateIssue,
+  listIssues,
   createMergeRequest,
   createMergeRequestNote
 } from '../api/index.js';
@@ -23,6 +24,7 @@ import {
   CreateIssueSchema,
   GetIssueSchema,
   UpdateIssueSchema,
+  ListIssuesSchema,
   CreateMergeRequestSchema,
   CreateMergeRequestNoteSchema
 } from '../schemas/index.js';
@@ -35,14 +37,16 @@ interface ToolCallRequest {
   };
 }
 
-// Type for MCP tool response
+// Type for MCP tool call response
 interface ToolResponse {
-  content: Array<{ type: string; text: string }>;
-  isError?: boolean;
+  content: Array<{
+    type: string;
+    text: string;
+  }>;
 }
 
 /**
- * Handle tool requests for the 11 exposed GitLab MCP tools
+ * Handle tool calls for all 12 GitLab MCP tools
  */
 export async function handleToolCall(request: ToolCallRequest): Promise<ToolResponse> {
   try {
@@ -66,9 +70,7 @@ export async function handleToolCall(request: ToolCallRequest): Promise<ToolResp
       }
 
       case "get_mr_discussions": {
-        const args = ListMergeRequestDiscussionsSchema.parse(
-          request.params.arguments
-        );
+        const args = ListMergeRequestDiscussionsSchema.parse(request.params.arguments);
         const discussions = await listMergeRequestDiscussions(
           args.project_id,
           args.merge_request_iid,
@@ -83,9 +85,7 @@ export async function handleToolCall(request: ToolCallRequest): Promise<ToolResp
       }
 
       case "reply_to_thread": {
-        const args = ReplyToThreadSchema.parse(
-          request.params.arguments
-        );
+        const args = ReplyToThreadSchema.parse(request.params.arguments);
         const note = await replyToThread(
           args.project_id,
           args.merge_request_iid,
@@ -93,7 +93,9 @@ export async function handleToolCall(request: ToolCallRequest): Promise<ToolResp
           args.body
         );
         return {
-          content: [{ type: "text", text: JSON.stringify(note) }],
+          content: [
+            { type: "text", text: JSON.stringify(note) },
+          ],
         };
       }
 
@@ -167,6 +169,17 @@ export async function handleToolCall(request: ToolCallRequest): Promise<ToolResp
         return {
           content: [
             { type: "text", text: JSON.stringify(issue) },
+          ],
+        };
+      }
+
+      case "list_issues": {
+        const args = ListIssuesSchema.parse(request.params.arguments);
+        const { project_id, ...options } = args;
+        const issues = await listIssues(project_id, options);
+        return {
+          content: [
+            { type: "text", text: JSON.stringify(issues) },
           ],
         };
       }
