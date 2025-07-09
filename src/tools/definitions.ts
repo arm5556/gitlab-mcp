@@ -1,4 +1,4 @@
-// Tool definitions for the 11 exposed GitLab MCP tools
+// Tool definitions for the 12 exposed GitLab MCP tools
 import { zodToJsonSchema } from 'zod-to-json-schema';
 import {
   GetMergeRequestSchema,
@@ -10,11 +10,12 @@ import {
   CreateIssueSchema,
   GetIssueSchema,
   UpdateIssueSchema,
+  ListIssuesSchema,
   CreateMergeRequestSchema,
   CreateMergeRequestNoteSchema
 } from '../schemas/index.js';
 
-// Define all available tools - Extended version (11 tools)
+// Define all available tools - Extended version (12 tools)
 export const allTools = [
   {
     name: "get_merge_request",
@@ -60,6 +61,11 @@ export const allTools = [
     name: "update_issue",
     description: "Update an existing issue - modify title, description, assignees, labels, state, etc.",
     inputSchema: zodToJsonSchema(UpdateIssueSchema),
+  },
+  {
+    name: "list_issues",
+    description: "List issues in a GitLab project with filtering support - Filter by labels, state, assignee, author, milestone, and more. Perfect for finding issues by specific labels or other criteria.",
+    inputSchema: zodToJsonSchema(ListIssuesSchema),
   },
   {
     name: "create_merge_request",

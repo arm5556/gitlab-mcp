@@ -116,7 +116,6 @@ export const ReplyToThreadSchema = ProjectParamsSchema.extend({
   merge_request_iid: z.number().describe("The IID of a merge request"),
   discussion_id: z.string().describe("The ID of a thread"),
   body: z.string().describe("The content of the note or reply"),
-  created_at: z.string().optional().describe("Date the note was created at (ISO 8601 format)"),
 });
 
 export const UpdateMergeRequestSchema = ProjectParamsSchema.extend({

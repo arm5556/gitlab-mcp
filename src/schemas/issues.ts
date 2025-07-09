@@ -42,13 +42,8 @@ export const OptimizedGitLabIssueSchema = z.object({
     username: z.string(),
   })),
   labels: z.array(z.string()),
-  milestone: z.object({
-    title: z.string(),
-    state: z.string(),
-  }).nullable(),
   created_at: z.string(),
   updated_at: z.string(),
-  web_url: z.string(),
 });
 
 // Full Issue schema (for validation of GitLab API responses)
@@ -108,15 +103,17 @@ export function streamlineIssue(fullIssue: any): z.infer<typeof OptimizedGitLabI
           typeof label === 'string' ? label : label.name
         )
       : [],
-    milestone: fullIssue.milestone ? {
-      title: fullIssue.milestone.title,
-      state: fullIssue.milestone.state,
-    } : null,
     created_at: fullIssue.created_at,
     updated_at: fullIssue.updated_at,
-    web_url: fullIssue.web_url,
   };
 }
+
+// Simplified schema for listing issues (only labels and search)
+export const ListIssuesSchema = z.object({
+  project_id: z.string().describe("Project ID or URL-encoded path"),
+  labels: z.array(z.string()).optional().describe("Filter by label names"),
+  search: z.string().optional().describe("Search issues against their title and description"),
+});
 
 // Create issue schema
 export const CreateIssueSchema = ProjectParamsSchema.extend({
@@ -175,3 +172,4 @@ export type OptimizedGitLabIssue = z.infer<typeof OptimizedGitLabIssueSchema>;
 export type CreateIssueOptions = z.infer<typeof CreateIssueSchema>;
 export type GetIssueOptions = z.infer<typeof GetIssueSchema>;
 export type UpdateIssueOptions = z.infer<typeof UpdateIssueSchema>;
+export type ListIssuesOptions = z.infer<typeof ListIssuesSchema>;

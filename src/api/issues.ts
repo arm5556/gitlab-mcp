@@ -10,8 +10,43 @@ import {
   OptimizedGitLabIssueSchema,
   streamlineIssue,
   CreateIssueOptions, 
-  UpdateIssueOptions 
+  UpdateIssueOptions,
+  ListIssuesOptions 
 } from '../schemas/index.js';
+import { z } from 'zod';
+
+/**
+ * List issues in a GitLab project with filtering support
+ * (for list_issues tool)
+ */
+export async function listIssues(
+  projectId: string,
+  options: Omit<ListIssuesOptions, 'project_id'> = {}
+): Promise<OptimizedGitLabIssue[]> {
+  projectId = decodeURIComponent(projectId);
+  const url = new URL(
+    `${GITLAB_API_URL}/projects/${encodeURIComponent(projectId)}/issues`
+  );
+
+  // Add supported query parameters
+  if (options.labels && options.labels.length > 0) {
+    url.searchParams.append('labels', options.labels.join(','));
+  }
+  
+  if (options.search) {
+    url.searchParams.append('search', options.search);
+  }
+
+  const response = await fetch(url.toString(), DEFAULT_FETCH_CONFIG);
+  await handleGitLabError(response);
+  const issues = await response.json();
+
+  // Parse and validate the response
+  const parsedIssues = z.array(GitLabIssueSchema).parse(issues);
+  
+  // Transform to optimized format
+  return parsedIssues.map(streamlineIssue);
+}
 
 /**
  * Create a new issue in a GitLab project
