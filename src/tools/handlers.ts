@@ -1,10 +1,11 @@
-// Tool handlers for the 12 exposed GitLab MCP tools
+// Tool handlers for the 17 exposed GitLab MCP tools
 import * as z from 'zod';
 import {
   getMergeRequest,
   listMergeRequestDiscussions,
   replyToThread,
   updateMergeRequest,
+  getMergeRequestDiffs,
   getVulnerabilitiesByIds,
   getFailedTestCases,
   createIssue,
@@ -12,13 +13,18 @@ import {
   updateIssue,
   listIssues,
   createMergeRequest,
-  createMergeRequestNote
+  createMergeRequestNote,
+  listLabels,
+  createLabel,
+  updateLabel,
+  deleteLabel
 } from '../api/index.js';
 import {
   GetMergeRequestSchema,
   ListMergeRequestDiscussionsSchema,
   ReplyToThreadSchema,
   UpdateMergeRequestSchema,
+  GetMergeRequestDiffsSchema,
   GetVulnerabilitiesByIdsSchema,
   GetFailedTestReportSchema,
   CreateIssueSchema,
@@ -26,7 +32,11 @@ import {
   UpdateIssueSchema,
   ListIssuesSchema,
   CreateMergeRequestSchema,
-  CreateMergeRequestNoteSchema
+  CreateMergeRequestNoteSchema,
+  ListLabelsSchema,
+  CreateLabelSchema,
+  UpdateLabelSchema,
+  DeleteLabelSchema
 } from '../schemas/index.js';
 
 // Type for MCP tool call request
@@ -46,7 +56,7 @@ interface ToolResponse {
 }
 
 /**
- * Handle tool calls for all 12 GitLab MCP tools
+ * Handle tool calls for all 17 GitLab MCP tools
  */
 export async function handleToolCall(request: ToolCallRequest): Promise<ToolResponse> {
   try {
@@ -69,13 +79,29 @@ export async function handleToolCall(request: ToolCallRequest): Promise<ToolResp
         };
       }
 
+      case "get_merge_request_diffs": {
+        const args = GetMergeRequestDiffsSchema.parse(request.params.arguments);
+        const diffs = await getMergeRequestDiffs(
+          args.project_id,
+          args.merge_request_iid,
+          args.source_branch,
+          args.view
+        );
+        return {
+          content: [
+            { type: "text", text: JSON.stringify(diffs) },
+          ],
+        };
+      }
+
       case "get_mr_discussions": {
         const args = ListMergeRequestDiscussionsSchema.parse(request.params.arguments);
         const discussions = await listMergeRequestDiscussions(
           args.project_id,
           args.merge_request_iid,
           args.page,
-          args.per_page
+          args.per_page,
+          args.only_unresolved_comments
         );
         return {
           content: [
@@ -208,6 +234,55 @@ export async function handleToolCall(request: ToolCallRequest): Promise<ToolResp
         return {
           content: [
             { type: "text", text: JSON.stringify(discussion) },
+          ],
+        };
+      }
+
+      case "list_labels": {
+        const args = ListLabelsSchema.parse(request.params.arguments);
+        const { project_id, ...options } = args;
+        const labels = await listLabels(project_id, options);
+        return {
+          content: [
+            { type: "text", text: JSON.stringify(labels) },
+          ],
+        };
+      }
+
+      case "create_label": {
+        const args = CreateLabelSchema.parse(request.params.arguments);
+        const { project_id, ...options } = args;
+        const label = await createLabel(project_id, options);
+        return {
+          content: [
+            { type: "text", text: JSON.stringify(label) },
+          ],
+        };
+      }
+
+      case "update_label": {
+        const args = UpdateLabelSchema.parse(request.params.arguments);
+        const { project_id, label_id, ...options } = args;
+        const label = await updateLabel(project_id, label_id, options);
+        return {
+          content: [
+            { type: "text", text: JSON.stringify(label) },
+          ],
+        };
+      }
+
+      case "delete_label": {
+        const args = DeleteLabelSchema.parse(request.params.arguments);
+        await deleteLabel(args.project_id, args.label_id);
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({
+                status: "success",
+                message: "Label deleted successfully"
+              }),
+            },
           ],
         };
       }

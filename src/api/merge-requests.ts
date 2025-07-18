@@ -27,6 +27,10 @@ import {
   UpdateMergeRequestSchema,
   CreateMergeRequestSchema,
   CreateMergeRequestNoteSchema,
+  GitLabMergeRequestDiffSchema,
+  OptimizedGitLabMergeRequestDiffSchema,
+  streamlineMergeRequestDiff,
+  GetMergeRequestDiffsSchema,
   type GitLabMergeRequest,
   type OptimizedGitLabMergeRequest,
   type GitLabDiscussion,
@@ -35,7 +39,9 @@ import {
   type OptimizedCreatedNote,
   type PaginatedDiscussionResponse,
   type CreateMergeRequestOptions,
-  type CreateMergeRequestNoteOptions
+  type CreateMergeRequestNoteOptions,
+  type GitLabMergeRequestDiff,
+  type OptimizedGitLabMergeRequestDiff
 } from '../schemas/index.js';
 
 /**
@@ -84,7 +90,8 @@ export async function listMergeRequestDiscussions(
   projectId: string,
   mergeRequestIid: number,
   page: number = 1,
-  perPage: number = 20
+  perPage: number = 20,
+  onlyUnresolvedComments: boolean = true
 ): Promise<PaginatedDiscussionResponse> {
   validateGitLabToken();
   projectId = decodeURIComponent(projectId);
@@ -102,29 +109,38 @@ export async function listMergeRequestDiscussions(
     50 // Reasonable limit for discussions (50 pages * 100 per page = 5000 discussions max)
   );
   
-  // Filter for unresolved diff discussions
-  const allUnresolvedDiscussions = allDiscussions.filter(discussion => {
-    const hasUnresolvedDiffNotes = discussion.notes?.some(note => 
-      note.type === 'DiffNote' && 
-      note.resolvable === true && 
-      note.resolved === false
-    );
-    return hasUnresolvedDiffNotes;
-  });
+  // Filter discussions based on onlyUnresolvedComments parameter
+  const filteredDiscussions = onlyUnresolvedComments 
+    ? allDiscussions.filter(discussion => {
+        const hasUnresolvedDiffNotes = discussion.notes?.some(note => 
+          note.type === 'DiffNote' && 
+          note.resolvable === true && 
+          note.resolved === false
+        );
+        return hasUnresolvedDiffNotes;
+      })
+    : allDiscussions; // Return all discussions when onlyUnresolvedComments is false
 
   // Calculate pagination
-  const totalUnresolved = allUnresolvedDiscussions.length;
-  const totalPages = Math.ceil(totalUnresolved / validPerPage);
+  const totalDiscussions = filteredDiscussions.length;
+  const totalPages = Math.ceil(totalDiscussions / validPerPage);
   const startIndex = (validPage - 1) * validPerPage;
   const endIndex = startIndex + validPerPage;
   
   // Get discussions for current page
-  const pageDiscussions = allUnresolvedDiscussions
+  const pageDiscussions = filteredDiscussions
     .slice(startIndex, endIndex)
     .map(discussion => streamlineDiscussion(discussion));
 
   return {
-    total_unresolved: totalUnresolved,
+    total_unresolved: onlyUnresolvedComments ? totalDiscussions : allDiscussions.filter(discussion => {
+      const hasUnresolvedDiffNotes = discussion.notes?.some(note => 
+        note.type === 'DiffNote' && 
+        note.resolvable === true && 
+        note.resolved === false
+      );
+      return hasUnresolvedDiffNotes;
+    }).length,
     total_pages: totalPages,
     current_page: validPage,
     per_page: validPerPage,
@@ -262,4 +278,45 @@ export async function createMergeRequestNote(
   const data = await response.json();
   const fullNote = GitLabDiscussionNoteSchema.parse(data);
   return streamlineCreatedNote(fullNote);
+} 
+
+/**
+ * Get merge request changes/diffs by IID or branch name
+ * (for get_merge_request_diffs tool)
+ */
+export async function getMergeRequestDiffs(
+  projectId: string,
+  mergeRequestIid?: number,
+  branchName?: string,
+  view?: "inline" | "parallel"
+): Promise<OptimizedGitLabMergeRequestDiff[]> {
+  validateGitLabToken();
+  projectId = decodeURIComponent(projectId);
+  
+  if (!mergeRequestIid && !branchName) {
+    throw new Error("Either mergeRequestIid or branchName must be provided");
+  }
+
+  // If branch name is provided, get the MR IID first
+  if (branchName && !mergeRequestIid) {
+    const mergeRequest = await getMergeRequest(projectId, undefined, branchName);
+    mergeRequestIid = mergeRequest.iid;
+  }
+
+  const url = new URL(
+    `${GITLAB_API_URL}/projects/${encodeURIComponent(projectId)}/merge_requests/${mergeRequestIid}/changes`
+  );
+
+  if (view) {
+    url.searchParams.append("view", view);
+  }
+
+  const response = await fetch(url, DEFAULT_FETCH_CONFIG);
+  await handleGitLabError(response);
+  
+  const data = await response.json() as { changes: unknown };
+  const fullDiffs = z.array(GitLabMergeRequestDiffSchema).parse(data.changes);
+  
+  // Transform to optimized format for AI agents
+  return fullDiffs.map(streamlineMergeRequestDiff);
 } 

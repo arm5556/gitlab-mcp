@@ -1,6 +1,28 @@
 import { z } from "zod";
 import { GitLabUserSchema, GitLabHeadPipelineSchema, GitLabMergeRequestDiffRefSchema, ProjectParamsSchema } from "./base.js";
 
+// Merge Request Diff schemas
+export const GitLabMergeRequestDiffSchema = z.object({
+  old_path: z.string(),
+  new_path: z.string(),
+  a_mode: z.string().optional(),
+  b_mode: z.string().optional(),
+  new_file: z.boolean(),
+  renamed_file: z.boolean(),
+  deleted_file: z.boolean(),
+  diff: z.string(),
+});
+
+// Optimized Merge Request Diff schema - minimal fields for AI agents
+export const OptimizedGitLabMergeRequestDiffSchema = z.object({
+  old_path: z.string(),
+  new_path: z.string(), 
+  new_file: z.boolean(),
+  renamed_file: z.boolean(),
+  deleted_file: z.boolean(),
+  diff: z.string(),
+});
+
 // Optimized Merge Request schema - only essential fields for AI agents
 export const OptimizedGitLabMergeRequestSchema = z.object({
   iid: z.number(),
@@ -98,6 +120,21 @@ export function streamlineMergeRequest(fullMR: any): z.infer<typeof OptimizedGit
   };
 }
 
+/**
+ * Transform full GitLab MR diff response to optimized format for AI agents
+ * Removes unnecessary mode information and focuses on essential diff data
+ */
+export function streamlineMergeRequestDiff(fullDiff: any): z.infer<typeof OptimizedGitLabMergeRequestDiffSchema> {
+  return {
+    old_path: fullDiff.old_path,
+    new_path: fullDiff.new_path,
+    new_file: fullDiff.new_file,
+    renamed_file: fullDiff.renamed_file,
+    deleted_file: fullDiff.deleted_file,
+    diff: fullDiff.diff,
+  };
+}
+
 
 
 // Input schemas for MR operations
@@ -106,10 +143,17 @@ export const GetMergeRequestSchema = ProjectParamsSchema.extend({
   source_branch: z.string().optional().describe("Source branch name"),
 });
 
+export const GetMergeRequestDiffsSchema = ProjectParamsSchema.extend({
+  merge_request_iid: z.number().optional().describe("The IID of a merge request"),
+  source_branch: z.string().optional().describe("Source branch name"),
+  view: z.enum(["inline", "parallel"]).optional().describe("Diff view type (inline or parallel)"),
+});
+
 export const ListMergeRequestDiscussionsSchema = ProjectParamsSchema.extend({
   merge_request_iid: z.number().describe("The IID of a merge request"),
   page: z.number().optional().describe("Page number (default: 1)"),
   per_page: z.number().optional().describe("Discussions per page (default: 20, max: 50)"),
+  only_unresolved_comments: z.boolean().optional().describe("When true, list only unresolved comments for code fix in MR. When false, list all comments (default: true)"),
 });
 
 export const ReplyToThreadSchema = ProjectParamsSchema.extend({
@@ -147,4 +191,6 @@ export const CreateMergeRequestSchema = ProjectParamsSchema.extend({
 // Types
 export type GitLabMergeRequest = z.infer<typeof GitLabMergeRequestSchema>;
 export type OptimizedGitLabMergeRequest = z.infer<typeof OptimizedGitLabMergeRequestSchema>;
+export type GitLabMergeRequestDiff = z.infer<typeof GitLabMergeRequestDiffSchema>;
+export type OptimizedGitLabMergeRequestDiff = z.infer<typeof OptimizedGitLabMergeRequestDiffSchema>;
 export type CreateMergeRequestOptions = z.infer<typeof CreateMergeRequestSchema>; 

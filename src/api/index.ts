@@ -1,8 +1,9 @@
 // API function exports for GitLab MCP tools
 
-// Merge Request APIs (4 tools: get_merge_request, get_mr_discussions, reply_to_thread, update_merge_request)
+// Merge Request APIs (5 tools: get_merge_request, get_merge_request_diffs, get_mr_discussions, reply_to_thread, update_merge_request)
 export {
   getMergeRequest,
+  getMergeRequestDiffs,
   listMergeRequestDiscussions,
   replyToThread,
   updateMergeRequest
@@ -30,4 +31,12 @@ export {
 export {
   createMergeRequest,
   createMergeRequestNote
-} from './merge-requests.js'; 
+} from './merge-requests.js';
+
+// Label APIs (4 tools: list_labels, create_label, update_label, delete_label)
+export {
+  listLabels,
+  createLabel,
+  updateLabel,
+  deleteLabel
+} from './labels.js'; 
