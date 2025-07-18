@@ -3,14 +3,14 @@ description:
 globs: 
 alwaysApply: true
 ---
-# GitLab MCP Server - AI Agent Context (MR-Focused Edition)
+# GitLab MCP Server - AI Agent Context (Complete Edition)
 
 ## Project Overview
-This is an **AI-optimized Model Context Protocol (MCP) Server** for GitLab integration, specifically designed for **Merge Request management and Vulnerability analysis**. This fork provides AI agents with streamlined, focused tools for effective GitLab interactions.
+This is an **AI-optimized Model Context Protocol (MCP) Server** for GitLab integration, specifically designed for **comprehensive GitLab management** including Merge Requests, Issues, Labels, Vulnerabilities, and Testing. This fork provides AI agents with streamlined, focused tools for effective GitLab interactions.
 
 ## Why This Fork is AI-Optimized 🧠
 
-- **🎯 Essential Tools Only**: 6 carefully selected tools vs 40+ scattered operations
+- **🎯 Essential Tools Only**: 17 carefully selected tools vs 40+ scattered operations
 - **⚡ Performance Optimized**: 65-80% faster responses with streamlined schemas
 - **🔍 Smart Filtering**: Only unresolved discussions, not resolved noise
 - **🏗️ Clean Architecture**: 85% code reduction (3,490 → ~500 lines) with modular structure
@@ -30,18 +30,22 @@ src/
 │   ├── validation.ts     # Token validation
 │   └── index.ts          # Re-exports
 ├── api/
-│   ├── merge-requests.ts # MR-related API calls (4 tools)
-│   ├── vulnerabilities.ts# Enhanced GraphQL vulnerability API
-│   ├── pipelines.ts      # Test report API calls
+│   ├── merge-requests.ts # MR-related API calls (7 tools)
+│   ├── issues.ts         # Issue management API calls (4 tools)
+│   ├── labels.ts         # Label management API calls (4 tools)
+│   ├── vulnerabilities.ts# Enhanced GraphQL vulnerability API (1 tool)
+│   ├── pipelines.ts      # Test report API calls (1 tool)
 │   └── index.ts          # Re-exports all API functions
 ├── tools/
-│   ├── definitions.ts    # Tool definitions (6 tools only)
+│   ├── definitions.ts    # Tool definitions (17 tools total)
 │   ├── handlers.ts       # Tool request handlers
 │   └── index.ts          # Re-exports
 └── schemas/
     ├── base.ts           # Common base schemas
     ├── merge-requests.ts # MR schemas (optimized)
     ├── discussions.ts    # Discussion schemas (optimized)
+    ├── issues.ts         # Issue schemas (optimized)
+    ├── labels.ts         # Label schemas (optimized)
     ├── vulnerabilities.ts# Enhanced GraphQL vulnerability schemas
     ├── test-reports.ts   # Pipeline test report schemas
     └── index.ts          # Re-exports all schemas
@@ -53,17 +57,32 @@ src/
 - **Type-safe** - Full TypeScript support with clean imports
 - **Performance optimized** - Streamlined responses for faster processing
 
-## 🛠️ Essential Tools (6 Only)
+## 🛠️ Complete Tool Suite (17 Tools)
 
-### Merge Request Tools (4)
+### Merge Request Tools (7)
 1. **`get_merge_request`** - Get MR metadata (supports IID or branch name)
-2. **`mr_discussions`** - List **unresolved** diff discussions only
-3. **`create_merge_request_note`** - Add replies to MR threads
-4. **`update_merge_request`** - Update MR properties including labels
+2. **`get_merge_request_diffs`** - Get MR code changes/diffs for code review
+3. **`get_mr_discussions`** - List **unresolved** diff discussions only
+4. **`reply_to_thread`** - Reply to existing MR discussion threads
+5. **`update_merge_request`** - Update MR properties including labels
+6. **`create_merge_request`** - Create new merge requests
+7. **`create_merge_request_note`** - Add notes to MR threads
+
+### Issue Management Tools (4)
+8. **`create_issue`** - Create new issues with title, description, assignees, labels
+9. **`get_issue`** - Get details of specific issue by IID
+10. **`update_issue`** - Update existing issues (title, description, state, etc.)
+11. **`list_issues`** - List issues with filtering support
+
+### Label Management Tools (4)
+12. **`list_labels`** - Get all available labels with optional filtering
+13. **`create_label`** - Create new labels with name, color, description
+14. **`update_label`** - Update existing labels (name, color, etc.)
+15. **`delete_label`** - Remove labels by ID or name
 
 ### Vulnerability & Testing Tools (2)
-5. **`get_vulnerabilities_by_ids`** - Enhanced GraphQL vulnerability data
-6. **`get_failed_test_cases`** - Pipeline test report analysis
+16. **`get_vulnerabilities_by_ids`** - Enhanced GraphQL vulnerability data
+17. **`get_failed_test_cases`** - Pipeline test report analysis
 
 ## Performance Optimizations ⚡
 
@@ -255,12 +274,12 @@ node build/src/index.js    # Run MCP server
 
 ## Best Practices for AI Agents
 
-1. **Use Optimized Tools**: All 6 tools return streamlined, AI-friendly data
+1. **Use Optimized Tools**: All 17 tools return streamlined, AI-friendly data
 2. **Handle Arrays**: Single IDs should be passed as arrays: `["12345"]`
 3. **Check Schemas**: Reference schema descriptions for required fields
 4. **Error Context**: Include project context when errors occur
 5. **Batch Operations**: Use tools that support multiple items when possible
-6. **Focus on Unresolved**: `mr_discussions` only returns unresolved items
+6. **Focus on Unresolved**: `get_mr_discussions` only returns unresolved items
 7. **Use Branch Names**: More intuitive than MR IIDs for development workflow
 
 ## MCP Integration Notes
