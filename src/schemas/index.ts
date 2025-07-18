@@ -1,4 +1,4 @@
-// Re-export all schemas and types needed for our 11 MCP tools
+// Re-export all schemas and types needed for our 17 MCP tools
 
 // Base schemas
 export * from "./base.js";
@@ -16,4 +16,7 @@ export * from "./vulnerabilities.js";
 export * from "./test-reports.js";
 
 // Issue schemas (3 tools: create_issue, get_issue, update_issue)
-export * from "./issues.js"; 
+export * from "./issues.js";
+
+// Label schemas (3 tools: list_labels, create_label, delete_label)
+export * from "./labels.js"; 

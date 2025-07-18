@@ -1,4 +1,4 @@
-// Tool definitions for the 12 exposed GitLab MCP tools
+// Tool definitions for the 17 exposed GitLab MCP tools
 import { zodToJsonSchema } from 'zod-to-json-schema';
 import {
   GetMergeRequestSchema,
@@ -12,10 +12,15 @@ import {
   UpdateIssueSchema,
   ListIssuesSchema,
   CreateMergeRequestSchema,
-  CreateMergeRequestNoteSchema
+  CreateMergeRequestNoteSchema,
+  GetMergeRequestDiffsSchema,
+  ListLabelsSchema,
+  CreateLabelSchema,
+  UpdateLabelSchema,
+  DeleteLabelSchema
 } from '../schemas/index.js';
 
-// Define all available tools - Extended version (12 tools)
+// Define all available tools - Complete version (17 tools)
 export const allTools = [
   {
     name: "get_merge_request",
@@ -23,8 +28,13 @@ export const allTools = [
     inputSchema: zodToJsonSchema(GetMergeRequestSchema),
   },
   {
+    name: "get_merge_request_diffs",
+    description: "Get MR code changes - retrieve the actual file changes/diffs in a merge request for code review (Either mergeRequestIid or branchName must be provided)",
+    inputSchema: zodToJsonSchema(GetMergeRequestDiffsSchema),
+  },
+  {
     name: "get_mr_discussions",
-    description: "Get code review comments that need responses - Lists unresolved discussion threads on specific code lines in a merge request. Perfect for finding comments from reviewers that require action or replies.",
+    description: "Get code review comments from merge request discussions - Lists discussion threads on specific code lines. Use only_unresolved_comments=true (default) to get unresolved comments needing responses, or only_unresolved_comments=false to get all comments for comprehensive review.",
     inputSchema: zodToJsonSchema(ListMergeRequestDiscussionsSchema),
   },
   {
@@ -76,6 +86,26 @@ export const allTools = [
     name: "create_merge_request_note",
     description: "Create a new note on a merge request (resolvable=false, optionally on specific diff lines)",
     inputSchema: zodToJsonSchema(CreateMergeRequestNoteSchema),
+  },
+  {
+    name: "list_labels",
+    description: "List labels for a project - Get all available labels with optional filtering by search term",
+    inputSchema: zodToJsonSchema(ListLabelsSchema),
+  },
+  {
+    name: "create_label",
+    description: "Create a new label in a project - Add a new label with name, color, and optional description",
+    inputSchema: zodToJsonSchema(CreateLabelSchema),
+  },
+  {
+    name: "update_label",
+    description: "Update an existing label - modify name, color, and optional description",
+    inputSchema: zodToJsonSchema(UpdateLabelSchema),
+  },
+  {
+    name: "delete_label",
+    description: "Delete a label from a project - Remove a label by ID or name",
+    inputSchema: zodToJsonSchema(DeleteLabelSchema),
   },
 ];
 
